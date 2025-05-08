@@ -1,33 +1,29 @@
 ﻿import os
 
 output_file = "index.md"
-repo_root = "."  # You can change this if needed
+repo_root = "."  # Current directory
+
+def is_visible_path(path):
+    return not any(part.startswith('.') for part in path.split(os.sep))
 
 with open(output_file, "w", encoding="utf-8") as f:
     f.write("# 📄 Tranglo Document Index\n\n")
     f.write("Welcome! Below are all publicly accessible documents organized by folder:\n\n")
 
     for root, dirs, files in os.walk(repo_root):
-        # Skip hidden folders like .git or .github
-        if any(part.startswith(".") for part in root.split(os.sep)):
+        # Skip hidden folders like .git, .github, .vscode
+        if not is_visible_path(root):
             continue
 
-        relative_root = os.path.relpath(root, repo_root)
-        if relative_root == ".":
-            relative_root = "Root"
+        visible_files = [file for file in files if not file.startswith(".") and file != output_file]
+        if not visible_files:
+            continue
 
+        relative_root = os.path.relpath(root, repo_root).replace("\\", "/")
         f.write(f"\n## 📁 {relative_root}\n\n")
-        has_files = False
 
-        for file in sorted(files):
-            if file.startswith(".") or file == output_file:
-                continue
-
-            rel_path = os.path.relpath(os.path.join(root, file), repo_root).replace("\\", "/")
+        for file in sorted(visible_files):
+            rel_path = os.path.join(relative_root, file).replace("\\", "/")
             f.write(f"- [{file}](./{rel_path})\n")
-            has_files = True
 
-        if not has_files:
-            f.write("_(No files in this folder)_\n")
-
-print(f"✅ '{output_file}' generated with full directory scan.")
+print(f"✅ index.md created with content from folders and subfolders.")
